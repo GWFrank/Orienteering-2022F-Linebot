@@ -1,0 +1,4 @@
+# Dolphin's directory config file
+.directory
+# This may have secrets, don't push it!
+config.ini  

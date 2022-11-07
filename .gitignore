@@ -1,4 +1,8 @@
 # Dolphin's directory config file
 .directory
-# This may have secrets, don't push it!
-config.ini  
+# These may have secrets, don't push it!
+config.ini
+authtoken
+
+.vscode/
+__pycache__/

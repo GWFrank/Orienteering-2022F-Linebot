@@ -1,0 +1,29 @@
+version: '3.8'
+
+services:
+  rev_proxy:
+    container_name: linebot-rev_proxy
+    build: ./rev_proxy
+    image: linebot-rev_proxy
+    networks:
+      - internal
+      - external
+    ports:
+      - 4545:4040 # For inspecting ngrok status
+    command: ngrok http bot:5555
+  bot:
+    container_name: linebot-bot
+    build: ./bot
+    image: linebot-bot
+    working_dir: /linebot
+    volumes:
+      - ./bot:/linebot
+    networks:
+      - internal
+      - external
+    command: waitress-serve --listen bot:5555 sample_app:app
+
+networks:
+  internal:
+    internal: true
+  external:

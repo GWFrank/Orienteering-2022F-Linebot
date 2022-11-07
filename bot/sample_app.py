@@ -8,6 +8,7 @@ from flask import Flask, request, abort
 from linebot import LineBotApi, WebhookHandler
 from linebot.exceptions import InvalidSignatureError
 from linebot.models import MessageEvent, TextMessage, TextSendMessage
+from werkzeug.middleware.proxy_fix import ProxyFix
 
 import configparser
 
@@ -71,7 +72,6 @@ def pretty_echo(event):
             TextSendMessage(text=msg)
         )
 
-
-
 if __name__ == "__main__":
-    app.run()
+    # app.run()
+    pass

@@ -3,8 +3,7 @@
 ## Setup
 
 1. Go to [ngrok's website](https://ngrok.com)
-2. Get your authtoken and ngrok's executable
-3. Put the authtoken in `rev_proxy/authtoken` and the executable in `rev_proxy/ngrok.tgz`
+2. Get your authtoken and put it in `rev_proxy/authtoken`
 
 ## Run
 

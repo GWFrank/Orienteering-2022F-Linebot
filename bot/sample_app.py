@@ -43,8 +43,6 @@ def callback():
     return 'OK'
 
 # 學你說話
-
-
 @handler.add(MessageEvent, message=TextMessage)
 def pretty_echo(event):
 

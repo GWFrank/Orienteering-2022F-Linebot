@@ -10,8 +10,8 @@ services:
       - external
     ports:
       - 4545:4040 # For inspecting ngrok status
-    command: ngrok http bot:5555
-  bot:
+    command: ngrok http bot_srv:5555
+  bot_srv:
     container_name: linebot-bot
     build: ./bot
     image: linebot-bot
@@ -21,7 +21,7 @@ services:
     networks:
       - internal
       - external
-    command: waitress-serve --listen bot:5555 sample_app:app
+    command: waitress-serve --listen bot_srv:5555 bot:app
 
 networks:
   internal:

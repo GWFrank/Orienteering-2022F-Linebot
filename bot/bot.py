@@ -46,6 +46,18 @@ class Station:
             self._captured = True
             return (True, round(1.5*self._points))
 
+def dict2station(objs):
+    sts = list()
+    for obj in objs:
+        sts.append(Station(
+            obj["sid"],
+            obj["name"],
+            obj["hints"],
+            obj["points"],
+            obj["flag"]
+        ))
+    return sts
+
 class Team:
     def __init__(self, user_id: str, name: str):
         self._user_id = user_id
@@ -76,8 +88,9 @@ class Team:
 TeamList = dict[str, Team]
 StationList = list[Station]
 Teams = TeamList()
-Stations = StationList()
-
+# Stations = StationList()
+with open("stations.json", "r") as f:
+    Stations = json.load(f, object_hook=dict2station)
 
 # 接收 LINE 的資訊
 @app.route("/callback", methods=['POST'])

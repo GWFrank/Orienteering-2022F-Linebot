@@ -5,6 +5,12 @@
 1. Go to [ngrok's website](https://ngrok.com)
 2. Get your authtoken and put it in `rev_proxy/authtoken`
 3. Download ngrok's executable and put it in `rev_proxy/ngrok.tgz`
+4. Create `bot/config.ini` in this format:
+   ```
+   [line-bot]
+   channel_access_token = <your channel access token>
+   channel_secret = <your channel secret>
+   ```
 
 ## Run
 

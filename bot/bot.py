@@ -176,18 +176,21 @@ def getCommand(event: MessageEvent):
         else:
             uid = event.source.user_id
             sid, name = int(args[1]), args[2]
+            print(sid, name)
             if Teams[uid].check_answered(sid): # When the station has been answered
                 msgs.append(TextSendMessage(
                     text = "你好像已經回答過這站了喔！！"
                 ))
             else:
+                correct = False
                 for t in Stations:
                     if t.check_answer(sid, name):
+                        correct = True
                         hint = t.get_hints()
                         msgs += [
                             TextSendMessage(text="恭喜你答對了，以下是你的站內地圖以及要找的地方。"),
-                            ImageSendMessage(original_content_url=hint[0]),
-                            ImageSendMessage(original_content_url=hint[1])
+                            ImageSendMessage(hint[0], hint[0]),
+                            ImageSendMessage(hint[1], hint[1])
                         ]
                         Teams[uid].answered(sid)
                         tmp_team = dict()
@@ -195,7 +198,7 @@ def getCommand(event: MessageEvent):
                             tmp_team[k] = vars(v)
                         with open("team.json", "w", newline='', encoding="utf-8") as json_file:
                             json.dump(tmp_team, json_file, ensure_ascii=False)
-                else: # When no station matched
+                if not correct: # When no station matched
                     msgs.append(TextSendMessage(
                         text = "也許你好像哪裡答錯了QQ"
                     ))
@@ -221,8 +224,10 @@ def getCommand(event: MessageEvent):
                     text = "再傳一次是不會獲得兩倍分數的"
                 ))
             else:
+                correct = False
                 for t in Stations:
                     if t.check_capture(sid, flag):
+                        correct = True
                         first, pts = t.get_points()
                         Teams[uid].captured(sid)
                         Teams[uid].score += pts
@@ -243,7 +248,7 @@ def getCommand(event: MessageEvent):
                             tmp_team[k] = vars(v)
                         with open("team.json", "w", newline='', encoding="utf-8") as json_file:
                             json.dump(tmp_team, json_file, ensure_ascii=False)
-                else:
+                if not correct:
                     msgs.append(TextSendMessage(
                         text = "flag好像不是這個QQ，請檢查看看有沒有寫錯字"
                     ))

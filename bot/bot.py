@@ -132,7 +132,7 @@ def getCommand(event: MessageEvent):
 
     args = event.message.text.split()
     cmd = args[0]
-    if cmd == "register":
+    if cmd == "register" or cmd == "Register" or cmd == "r" or cmd == "R":
         # Register team name
         # Usage: register <teamname>
         if len(args) != 2:
@@ -158,13 +158,13 @@ def getCommand(event: MessageEvent):
             with open("team.json", "w", newline='', encoding="utf-8") as json_file:
                 json.dump(tmp_team, json_file, ensure_ascii=False)
 
-    elif cmd == "leaderboard":
+    elif cmd == "leaderboard" or cmd == "Leaderboard" or cmd == "l" or cmd == "L":
         # Show leaderboard & status of each question
         leaderboard_msg = "隊伍名稱 | 分數"
         for t in sorted(Teams.values(), key=lambda x:x.score, reverse=True):
             leaderboard_msg += t.get_info()
         msgs.append(TextSendMessage(text=leaderboard_msg))
-    elif cmd == "answer":
+    elif cmd == "answer" or cmd == "Answer" or cmd == "a" or cmd == "A":
         # Answer questions about stations
         if len(args) != 3 or not args[1].isdigit():
             msgs.append(TextSendMessage(
@@ -203,7 +203,7 @@ def getCommand(event: MessageEvent):
                         text = "也許你好像哪裡答錯了QQ"
                     ))
 
-    elif cmd == "capture":
+    elif cmd == "capture" or cmd == "Capture" or cmd == "c" or cmd == "C":
         # Capture a station
         if len(args) != 3 or not args[1].isdigit():
             msgs.append(TextSendMessage(

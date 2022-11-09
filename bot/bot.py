@@ -209,8 +209,8 @@ def getCommand(event: MessageEvent):
             msgs.append(TextSendMessage(
                 text = """格式錯誤。
 指令格式： capture <station_id> <your_flag>
-範例： capture 1 flag\{定向越野好讚\}
-備註： <station_id> 須為數字，<your_flag>為一個形式為flag\{<content>\}的字串"""
+範例： capture 1 flag{定向越野好讚}
+備註： <station_id> 須為數字，<your_flag>為一個形式為flag{<content>}的字串"""
             ))
         else:
             uid = event.source.user_id

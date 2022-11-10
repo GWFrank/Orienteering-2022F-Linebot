@@ -83,6 +83,8 @@ class Team:
 
 TeamList = dict[str, Team]
 StationList = list[Station]
+Teams = TeamList()
+Stations = StationList()
 
 def dict2team(obj):
     return Team(
@@ -93,16 +95,18 @@ def dict2team(obj):
         obj["_captured_stations"]
     )
 
-try:
-    with open("team.json", "r") as f:
-        Teams = json.load(f)
-        for k, v in Teams.items():
-            Teams[k] = dict2team(v)
-except FileNotFoundError:
-    Teams = TeamList()
-# Stations = StationList()
-with open("stations.json", "r") as f:
-    Stations = json.load(f, object_hook=dict2station)
+def read_db() -> None:
+    global Teams, Stations
+    try:
+        with open("team.json", "r") as f:
+            Teams = json.load(f)
+            for k, v in Teams.items():
+                Teams[k] = dict2team(v)
+    except FileNotFoundError:
+        Teams = TeamList()
+    # Stations = StationList()
+    with open("stations.json", "r") as f:
+        Stations = json.load(f, object_hook=dict2station)
 
 # 接收 LINE 的資訊
 @app.route("/callback", methods=['POST'])
@@ -128,6 +132,8 @@ def getCommand(event: MessageEvent):
     if event.source.user_id == "Udeadbeefdeadbeefdeadbeefdeadbeef":
         return
     
+    read_db()
+
     msgs = list()
 
     args = event.message.text.split()

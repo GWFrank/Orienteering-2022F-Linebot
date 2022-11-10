@@ -39,12 +39,13 @@ class Station:
     def get_hints(self) -> tuple[str, str]:
         return self._hints
     
-    def get_points(self) -> tuple[bool, int]:
-        if self._captured:
-            return (False, self._points)
-        else:
-            self._captured = True
-            return (True, round(1.5*self._points))
+    def get_points(self) -> int:
+        return self._points
+        # if self._captured:
+        #     return (False, self._points)
+        # else:
+        #     self._captured = True
+        #     return (True, round(1.5*self._points))
 
 def dict2station(obj):
     return Station(
@@ -234,21 +235,14 @@ def getCommand(event: MessageEvent):
                 for t in Stations:
                     if t.check_capture(sid, flag):
                         correct = True
-                        first, pts = t.get_points()
+                        pts = t.get_points()
                         Teams[uid].captured(sid)
                         Teams[uid].score += pts
-                        if first:
-                            msgs.append(TextSendMessage(
-                                text = f"""恭喜你獲得本站的首殺
+                        msgs.append(TextSendMessage(
+                            text = f"""恭喜你獲得本站的flag
 獲得分數{pts}
 目前總得分{Teams[uid].score}"""
-                            ))
-                        else:
-                            msgs.append(TextSendMessage(
-                                text = f"""恭喜你獲得本站的flag
-獲得分數{pts}
-目前總得分{Teams[uid].score}"""
-                            ))
+                        ))
                         tmp_team = dict()
                         for k, v in Teams.items():
                             tmp_team[k] = vars(v)

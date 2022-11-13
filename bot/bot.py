@@ -1,7 +1,3 @@
-# Src:
-# https://ithelp.ithome.com.tw/articles/10217767
-# https://ithelp.ithome.com.tw/articles/10229943
-
 from __future__ import unicode_literals
 from flask import Flask, request, abort
 from linebot import LineBotApi, WebhookHandler
@@ -14,7 +10,6 @@ import json
 
 app = Flask(__name__)
 
-# LINE 聊天機器人的基本資料
 config = configparser.ConfigParser()
 config.read('config.ini')
 
@@ -27,37 +22,47 @@ class Station:
         self,
         sid: int,
         name: str,
-        hints: tuple[str, str],
-        points: int,
-        flag: str,
+        hints: list[str, str],
+        questions: list[str],
+        points: list[int],
+        flags: list[str],
         captured: bool = False
     ):
         self._sid = sid
         self._name = name
         self._hints = hints
+        self._questions = questions
         self._points = points
-        self._flag = flag
+        self._flags = flags
         self._captured = captured
 
     def check_answer(self, sid: int, name: str) -> bool:
         return (sid == self._sid and name == self._name)
 
-    def check_capture(self, sid: int, flag: str) -> bool:
-        return (sid == self._sid and flag == self._flag)
+    def check_capture(self, sid: int, pid: int, flag: str) -> bool:
+        if pid < 0:
+            return False
+        try:
+            return (sid == self._sid and flag == self._flags[pid-1])
+        except IndexError:
+            return False
 
     def get_sid(self) -> int:
         return self._sid
 
-    def get_hints(self) -> tuple[str, str]:
+    def get_hints(self) -> list[str, str]:
         return self._hints
 
-    def get_points(self) -> int:
-        return self._points
+    def get_points(self, pid: int) -> int:
+        return self._points[pid-1]
         # if self._captured:
         #     return (False, self._points)
         # else:
         #     self._captured = True
         #     return (True, round(1.5*self._points))
+    
+    def get_questions(self) -> list[str]:
+        return self._questions
 
 
 class Team:
@@ -84,14 +89,14 @@ class Team:
     def check_answered(self, sid: int) -> bool:
         return sid in self._answered_stations
 
-    def check_captured(self, sid: int) -> bool:
-        return sid in self._captured_stations
+    def check_captured(self, sid: int, pid: int) -> bool:
+        return f"{sid}-{pid}" in self._captured_stations
 
     def answered(self, sid: int) -> None:
         self._answered_stations.append(sid)
 
-    def captured(self, sid: int) -> None:
-        self._captured_stations.append(sid)
+    def captures(self, sid: int, pid: int) -> None:
+        self._captured_stations.append(f"{sid}-{pid}")
 
 
 TeamList = dict[str, Team]
@@ -103,8 +108,9 @@ def dict2station(obj):
         obj["_sid"],
         obj["_name"],
         obj["_hints"],
+        obj["_questions"],
         obj["_points"],
-        obj["_flag"],
+        obj["_flags"],
         obj["_captured"]
     )
 
@@ -144,13 +150,11 @@ def write_db() -> None:
         tmp_team[k] = vars(v)
     with open("team.json", "w", newline="\n", encoding="utf-8") as json_file:
         json.dump(tmp_team, json_file, ensure_ascii=False, indent=4)
-    tmp_stations = list()
-    for s in Stations:
-        tmp_stations.append(vars(s))
-    with open("stations.json", "w", newline="\n", encoding="utf-8") as json_file:
-        json.dump(tmp_stations, json_file, ensure_ascii=False, indent=4)
-
-# 接收 LINE 的資訊
+    # tmp_stations = list()
+    # for s in Stations:
+    #     tmp_stations.append(vars(s))
+    # with open("stations.json", "w", newline="\n", encoding="utf-8") as json_file:
+    #     json.dump(tmp_stations, json_file, ensure_ascii=False, indent=4)
 
 
 @app.route("/callback", methods=['POST'])
@@ -179,15 +183,16 @@ def getCommand(event: MessageEvent):
     read_db()
     msgs = list()
     args = event.message.text.split()
+    print(args)
     cmd = args[0]
     if cmd == "register" or cmd == "Register" or cmd == "r" or cmd == "R":
         # Register team name
         # Usage: register <teamname>
         if len(args) != 2:
             msgs.append(TextSendMessage(text=(
-                "格式錯誤。",
-                "指令格式： register <team name>",
-                "範例： register 第一組",
+                "格式錯誤。\n"
+                "指令格式： register <team name>\n"
+                "範例： register 第一組\n"
                 "備註： 隊伍名稱不能含有空白、換行"
             )))
         else:
@@ -203,45 +208,46 @@ def getCommand(event: MessageEvent):
     elif cmd == "leaderboard" or cmd == "Leaderboard" or cmd == "l" or cmd == "L":
         # Show leaderboard & status of each question
         leaderboard_msg = "隊伍名稱 | 分數"
-        for t in sorted(Teams.values(), key=lambda x: x.score, reverse=True):
-            leaderboard_msg += t.get_info()
+        for st in sorted(Teams.values(), key=lambda x: x.score, reverse=True):
+            leaderboard_msg += st.get_info()
         msgs.append(TextSendMessage(text=leaderboard_msg))
     elif cmd == "answer" or cmd == "Answer" or cmd == "a" or cmd == "A":
         # Answer questions about stations
         if len(args) != 3 or not args[1].isdigit():
             msgs.append(TextSendMessage(text=(
-                "格式錯誤。"
-                "指令格式： answer <station_id> <your_answer>"
-                "範例： answer 1 定向越野好讚"
+                "格式錯誤。\n"
+                "指令格式： answer <station_id> <your_answer>\n"
+                "範例： answer 1 定向越野好讚\n"
                 "備註： <station_id> 須為數字，答案不能含有空白、換行"
             )))
         else:
             uid = event.source.user_id
             sid, name = int(args[1]), args[2]
-            print(sid, name)
+            # print(sid, name)
             # When the station has been answered
             if Teams[uid].check_answered(sid):
-                msgs.append(TextSendMessage(text="你好像已經回答過這站了喔！！"))
-                for t in Stations:
-                    if t.get_sid() == sid:
-                        hint = t.get_hints()
-                        msgs += [
-                            TextSendMessage(text="以下是你的站內地圖以及要找的地方。"),
-                            ImageSendMessage(hint[0], hint[0]),
-                            ImageSendMessage(hint[1], hint[1])
-                        ]
+                for st in Stations:
+                    if st.get_sid() == sid:
+                        hints = st.get_hints()
+                        question_text = ""
+                        for i, q in enumerate(st.get_questions()):
+                            question_text += f"\n檢查點 {i+1}：{q}"
+                        msgs.append(TextSendMessage(text=(f"你好像已經回答過這站了喔！！\n以下是你的站內地圖以及提示圖片。{question_text}")))
+                        for h in hints:
+                            msgs.append(ImageSendMessage(h, h))
                         break
             else:
                 correct = False
-                for t in Stations:
-                    if t.check_answer(sid, name):
+                for st in Stations:
+                    if st.check_answer(sid, name):
                         correct = True
-                        hint = t.get_hints()
-                        msgs += [
-                            TextSendMessage(text="恭喜你答對了，以下是你的站內地圖以及要找的地方。"),
-                            ImageSendMessage(hint[0], hint[0]),
-                            ImageSendMessage(hint[1], hint[1])
-                        ]
+                        hints = st.get_hints()
+                        question_text = ""
+                        for i, q in enumerate(st.get_questions()):
+                            question_text += f"\n檢查點 {i+1}：{q}"
+                        msgs.append(TextSendMessage(text=(f"恭喜你答對了，以下是你的站內地圖以及提示圖片。{question_text}")))
+                        for h in hints:
+                            msgs.append(ImageSendMessage(h, h))
                         Teams[uid].answered(sid)
                 if not correct:  # When no station matched
                     msgs.append(TextSendMessage(
@@ -250,38 +256,34 @@ def getCommand(event: MessageEvent):
 
     elif cmd == "capture" or cmd == "Capture" or cmd == "c" or cmd == "C":
         # Capture a station
-        if len(args) != 3 or not args[1].isdigit():
+        if len(args) != 4 or not args[1].isdigit() or not args[2].isdigit():
             msgs.append(TextSendMessage(text=(
-                "格式錯誤。",
-                "指令格式： capture <station_id> <your_flag>",
-                "範例： capture 1 定向越野好讚",
-                "備註： <station_id> 須為數字",
+                "格式錯誤。\n"
+                "指令格式： capture <station_id> <point_id> <your_flag>\n"
+                "範例： capture 1 1 定向越野好讚\n"
+                "備註： <station_id> & <point_id> 須為數字"
             )))
         else:
             uid = event.source.user_id
-            sid, flag = int(args[1]), args[2]
+            sid, pid, flag = int(args[1]), int(args[2]), args[3]
             if not Teams[uid].check_answered(sid):
                 msgs.append(TextSendMessage(text="你好像還沒解出這是哪一站喔"))
-            elif Teams[uid].check_captured(sid):
+            elif Teams[uid].check_captured(sid, pid):
                 msgs.append(TextSendMessage(text="再傳一次是不會獲得兩倍分數的"))
             else:
                 correct = False
-                for t in Stations:
-                    if t.check_capture(sid, flag):
+                for st in Stations:
+                    if st.check_capture(sid, pid, flag):
                         correct = True
-                        pts = t.get_points()
-                        Teams[uid].captured(sid)
+                        pts = st.get_points(pid)
+                        Teams[uid].captures(sid, pid)
                         Teams[uid].score += pts
                         msgs.append(TextSendMessage(text=(
-                            "恭喜你獲得本站的flag"
-                            f"獲得分數{pts}"
+                            "恭喜你獲得本站的flag\n"
+                            f"獲得分數{pts}\n"
                             f"目前總得分{Teams[uid].score}"
                         )))
-                        tmp_team = dict()
-                        for k, v in Teams.items():
-                            tmp_team[k] = vars(v)
-                        with open("team.json", "w", newline='', encoding="utf-8") as json_file:
-                            json.dump(tmp_team, json_file, ensure_ascii=False)
+                        
                 if not correct:
                     msgs.append(TextSendMessage(
                         text="flag好像不是這個QQ，請檢查看看有沒有寫錯字"))
@@ -293,7 +295,6 @@ def getCommand(event: MessageEvent):
     line_bot_api.reply_message(
         event.reply_token,
         msgs
-        # TextSendMessage(text=msg)
     )
     write_db()
 

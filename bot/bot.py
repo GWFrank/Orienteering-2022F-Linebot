@@ -218,7 +218,7 @@ def getCommand(event: MessageEvent):
                 "格式錯誤。\n"
                 "指令格式： answer <station_id> <your_answer>\n"
                 "範例： answer 1 定向越野好讚\n"
-                "備註： <station_id> 須為數字，答案不能含有空白、換行"
+                "備註： <station_id> 須為數字，<your_answer> 不能含有空白、換行"
             )))
         else:
             uid = event.source.user_id

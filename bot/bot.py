@@ -40,7 +40,7 @@ class Station:
         return (sid == self._sid and name == self._name)
 
     def check_capture(self, sid: int, pid: int, flag: str) -> bool:
-        if pid < 0:
+        if pid <= 0:
             return False
         try:
             return (sid == self._sid and flag == self._flags[pid-1])

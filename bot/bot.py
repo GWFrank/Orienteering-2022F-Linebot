@@ -156,6 +156,10 @@ def write_db() -> None:
     # with open("stations.json", "w", newline="\n", encoding="utf-8") as json_file:
     #     json.dump(tmp_stations, json_file, ensure_ascii=False, indent=4)
 
+def registered(uid: str) -> bool:
+    global Teams
+    return uid in Teams.keys()
+
 
 @app.route("/callback", methods=['POST'])
 def callback():
@@ -172,7 +176,6 @@ def callback():
         abort(400)
 
     return 'OK'
-
 
 @handler.add(MessageEvent, message=TextMessage)
 def getCommand(event: MessageEvent):
@@ -204,6 +207,14 @@ def getCommand(event: MessageEvent):
             msgs.append(TextSendMessage(
                 text=f"已成功註冊為「{args[1]}」"
             ))
+   
+    elif not registered(event.source.user_id):
+        msgs.append(TextSendMessage(text=(
+            "你還沒註冊喔！\n"
+            "指令格式： register <team name>\n"
+            "範例： register 第一組\n"
+            "備註： 隊伍名稱不能含有空白、換行"
+        )))
 
     elif cmd == "leaderboard" or cmd == "Leaderboard" or cmd == "l" or cmd == "L":
         # Show leaderboard & status of each question

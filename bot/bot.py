@@ -256,10 +256,17 @@ def getCommand(event: MessageEvent):
                         question_text = ""
                         for i, q in enumerate(st.get_questions()):
                             question_text += f"\n檢查點 {i+1}：{q}"
-                        msgs.append(TextSendMessage(text=(f"恭喜你答對了，以下是你的站內地圖以及提示圖片。{question_text}")))
+                        Teams[uid].answered(sid)
+                        Teams[uid].score += 50
+                        msgs.append(TextSendMessage(text=(
+                            "恭喜你答對了\n"
+                            "獲得分數50\n"
+                            f"目前總得分{Teams[uid].score}\n"
+                            f"以下是你的站內地圖以及提示圖片。{question_text}"
+                            )))
                         for h in hints:
                             msgs.append(ImageSendMessage(h, h))
-                        Teams[uid].answered(sid)
+                        # Points for each answered stations
                 if not correct:  # When no station matched
                     msgs.append(TextSendMessage(
                         text="也許你好像哪裡答錯了QQ"

@@ -12,17 +12,19 @@
    channel_secret = <your channel secret>
    ```
 5. Prepare your `bot/stations.json` in this format:
-   ```
+   ```json
+   [
    {
-        "_sid": <station id>,
-        "_name": <station name>,
-        "_hints": [<url to hint photos>],
-        "_questions": [<questions at each station>],
-        "_points": [<points for each question>],
-        "_flags": [<flags for each question>],
+        "_sid": "station_id (int)",
+        "_name": "station_name",
+        "_hints": ["urls_to_hint_photo"],
+        "_questions": ["questions_at_each_station"],
+        "_points": ["points_for_each_question (int)"],
+        "_flags": ["flags_for_each_question"],
         "_captured": false
-    },
-
+   }
+   ]
+   ```
 ## Run
 
 1. `docker compose build`

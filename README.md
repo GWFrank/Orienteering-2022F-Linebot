@@ -11,6 +11,17 @@
    channel_access_token = <your channel access token>
    channel_secret = <your channel secret>
    ```
+5. Prepare your `bot/stations.json` in this format:
+   ```
+   {
+        "_sid": <station id>,
+        "_name": <station name>,
+        "_hints": [<url to hint photos>],
+        "_questions": [<questions at each station>],
+        "_points": [<points for each question>],
+        "_flags": [<flags for each question>],
+        "_captured": false
+    },
 
 ## Run
 
